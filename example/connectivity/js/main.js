@@ -1,13 +1,13 @@
 require.config( {
 	paths : {
-		text             : "/connectivity/js/lib/require/text",
-		backbone         : '/connectivity/js/lib/backbone/backbone',
-		underscore       : '/connectivity/js/lib/underscore/underscore-min',
-		mockjax          : '/connectivity/js/lib/jquery.mockjax',
-		machina          : '/connectivity/js/lib/machina/machina',
-		'machina.postal' : '/connectivity/js/lib/machina/machina.postal',
-		postal           : '/connectivity/js/lib/postal/postal',
-		'postal.diags'   : '/connectivity/js/lib/postal/postal.diagnostics.min'
+		text             : "/example/connectivity/js/lib/require/text",
+		backbone         : '/example/connectivity/js/lib/backbone/backbone',
+		underscore       : '/example/connectivity/js/lib/underscore/underscore-min',
+		mockjax          : '/example/connectivity/js/lib/jquery.mockjax',
+		machina          : '/example/connectivity/js/lib/machina/machina',
+		'machina.postal' : '/example/connectivity/js/lib/machina/machina.postal',
+		postal           : '/example/connectivity/js/lib/postal/postal',
+		'postal.diags'   : '/example/connectivity/js/lib/postal/postal.diagnostics.min'
 	},
 	shim : {
 		mockjax : [ 'jquery' ]
