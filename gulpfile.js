@@ -70,3 +70,12 @@ gulp.task("server", function(){
     }
     open( "http://localhost:" + port + "/index.html" );
 });
+
+gulp.task("watch", function() {
+    gulp.watch("./src/*", function(){
+        gulp.run("default");
+    });
+    gulp.watch("./spec/*", function(){
+        gulp.run("default");
+    });
+});

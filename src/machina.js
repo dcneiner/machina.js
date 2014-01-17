@@ -1,3 +1,4 @@
+/*global module, define */
 (function ( root, factory ) {
 	if ( typeof module === "object" && module.exports ) {
 		// Node, or CommonJS-Like environments
@@ -19,4 +20,4 @@
 	//import("fsm.js");
 	//import("api.js");
 	return machina;
-} ));
+}));
