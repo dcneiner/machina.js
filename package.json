@@ -75,7 +75,8 @@
     "gulp-beautify": "~1.0.3",
     "tiny-lr": "0.0.5",
     "express": "~3.4.7",
-    "gulp-rimraf": "0.0.8"
+    "gulp-rimraf": "0.0.8",
+    "open": "~0.0.4"
   },
   "licenses": [
     {

@@ -1,17 +1,18 @@
 var gulp        = require("gulp");
 var fileImports = require("gulp-imports");
-var pkg         = require("./package.json");
 var header      = require("gulp-header");
 var beautify    = require("gulp-beautify");
 var hintNot     = require("gulp-hint-not");
 var uglify      = require("gulp-uglify");
 var rename      = require("gulp-rename");
 var plato       = require("gulp-plato");
-var gutil       = require('gulp-util');
-var express     = require('express');
-var path        = require('path');
-var tinylr      = require('tiny-lr');
-var rimraf      = require('gulp-rimraf');
+var gutil       = require("gulp-util");
+var rimraf      = require("gulp-rimraf");
+var pkg         = require("./package.json");
+var express     = require("express");
+var path        = require("path");
+var open        = require("open");
+var port        = 3080;
 
 var banner = ["/**",
     " * <%= pkg.name %> - <%= pkg.description %>",
@@ -38,15 +39,8 @@ gulp.task("combine", function() {
         .pipe(gulp.dest("./example/connectivity/js/lib/machina"));
 });
 
-gulp.task('clean', function() {
-    gulp.src('./report', { read: false })
-        .pipe(rimraf());
-});
-
 gulp.task("default", function() {
-    gulp.run("clean");
     gulp.run("combine");
-    gulp.run("report");
 });
 
 gulp.task("report", function () {
@@ -54,37 +48,25 @@ gulp.task("report", function () {
         .pipe(plato("report"));
 });
 
-
-var createServers = function(port, lrport) {
-    var lr = tinylr();
-    lr.listen(lrport, function() {
-        gutil.log('LR Listening on', lrport);
-    });
-    var p = path.resolve('./');
+var createServer = function(port) {
+    var p = path.resolve("./");
     var app = express();
     app.use(express.static(p));
     app.listen(port, function() {
-        gutil.log('Listening on', port);
+        gutil.log("Listening on", port);
     });
 
     return {
-        lr: lr,
         app: app
     };
 };
 
 var servers;
 
-gulp.task('server', function(){
+gulp.task("server", function(){
+    gulp.run("report");
     if(!servers) {
-        servers = createServers(3080, 35729);
+        servers = createServer(port);
     }
-    gulp.watch(["./**/*", "!./node_modules/**/*"], function(evt){
-        gutil.log(gutil.colors.cyan(evt.path), 'changed');
-        servers.lr.changed({
-            body: {
-                files: [evt.path]
-            }
-        });
-    });
+    open( "http://localhost:" + port + "/index.html" );
 });
