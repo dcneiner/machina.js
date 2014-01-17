@@ -10,7 +10,11 @@
 <script src="/ext/expect.js"></script>
 <script src="/ext/mocha.js"></script>
 <script type="text/javascript">
-    mocha.setup({ ui: 'bdd', timeout: 60000, ignoreLeaks: true });
+    mocha.setup({
+        ui: 'bdd',
+        timeout: 60000,
+        ignoreLeaks: true
+    });
 </script>
 <script type="text/javascript" src="../src/utils.js"></script>
 <script type="text/javascript" src="../src/fsm.js"></script>
@@ -20,5 +24,6 @@
 <script type="text/javascript">
     mocha.run();
 </script>
+<script src="../ext/livereloadhack.js"></script>
 </body>
 </html>

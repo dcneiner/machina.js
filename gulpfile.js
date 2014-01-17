@@ -12,7 +12,9 @@ var pkg         = require("./package.json");
 var express     = require("express");
 var path        = require("path");
 var open        = require("open");
+var tinylr      = require("tiny-lr");
 var port        = 3080;
+var lrport      = 35729;
 
 var banner = ["/**",
     " * <%= pkg.name %> - <%= pkg.description %>",
@@ -48,7 +50,11 @@ gulp.task("report", function () {
         .pipe(plato("report"));
 });
 
-var createServer = function(port) {
+var createServers = function(port, lrport) {
+    var lr = tinylr();
+    lr.listen(lrport, function() {
+        gutil.log("LR Listening on", lrport);
+    });
     var p = path.resolve("./");
     var app = express();
     app.use(express.static(p));
@@ -57,6 +63,7 @@ var createServer = function(port) {
     });
 
     return {
+        lr: lr,
         app: app
     };
 };
@@ -66,16 +73,16 @@ var servers;
 gulp.task("server", function(){
     gulp.run("report");
     if(!servers) {
-        servers = createServer(port);
+        servers = createServers(port, lrport);
     }
+    gulp.watch(["./**/*", "!./node_modules/**/*", "!./lib/*"], function(evt){
+        gutil.log(gutil.colors.cyan(evt.path), "changed");
+        gulp.run("default");
+        servers.lr.changed({
+            body: {
+                files: [evt.path]
+            }
+        });
+    });
     open( "http://localhost:" + port + "/index.html" );
-});
-
-gulp.task("watch", function() {
-    gulp.watch("./src/*", function(){
-        gulp.run("default");
-    });
-    gulp.watch("./spec/*", function(){
-        gulp.run("default");
-    });
 });

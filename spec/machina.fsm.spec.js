@@ -134,7 +134,6 @@ describe( "machina.Fsm", function () {
 				expect( !!event2 ).to.be( true );
 				expect( !!event3 ).to.be( true );
 			} );
-
 			it( "should execute event callbacks with the fsm as the context", function () {
 				var fsm = new machina.Fsm({
 					states: {
@@ -380,7 +379,6 @@ describe( "machina.Fsm", function () {
 						booCount++;
 					}
 				},
-
 				three : {
 					"hai" : function () {
 						haiCount++;
