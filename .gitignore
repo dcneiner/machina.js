@@ -16,3 +16,4 @@ _ReSharper*
 desktop.ini
 .eprj
 report/
+bower/

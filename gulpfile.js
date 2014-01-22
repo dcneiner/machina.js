@@ -32,13 +32,11 @@ gulp.task("combine", function() {
         .pipe(hintNot())
         .pipe(beautify({indentSize: 4}))
         .pipe(gulp.dest("./lib/"))
-        .pipe(gulp.dest("./example/connectivity/js/lib/machina"))
         .pipe(gulp.dest("./lib/"))
         .pipe(uglify({ compress: { negate_iife: false }}))
         .pipe(header(banner, { pkg : pkg }))
         .pipe(rename("machina.min.js"))
         .pipe(gulp.dest("./lib/"))
-        .pipe(gulp.dest("./example/connectivity/js/lib/machina"));
 });
 
 gulp.task("default", function() {

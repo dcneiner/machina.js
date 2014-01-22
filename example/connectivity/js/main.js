@@ -1,16 +1,24 @@
 require.config( {
 	paths : {
-		text             : "/example/connectivity/js/lib/require/text",
-		backbone         : '/example/connectivity/js/lib/backbone/backbone',
-		underscore       : '/example/connectivity/js/lib/underscore/underscore-min',
-		mockjax          : '/example/connectivity/js/lib/jquery.mockjax',
-		machina          : '/example/connectivity/js/lib/machina/machina',
-		'machina.postal' : '/example/connectivity/js/lib/machina/machina.postal',
-		postal           : '/example/connectivity/js/lib/postal/postal',
-		'postal.diags'   : '/example/connectivity/js/lib/postal/postal.diagnostics.min'
+		text             : "/bower/requirejs-text/text",
+		backbone         : '/bower/backbone/backbone',
+		underscore       : '/bower/underscore/underscore',
+		mockjax          : '/bower/jquery-mockjax/jquery.mockjax',
+		machina          : '/lib/machina',
+		'machina.postal' : '/bower/machina.postal/lib/machina.postal',
+		postal           : '../../../bower/postal.js/lib/postal',
+		'postal.diags'   : '/ext/postal.diagnostics.min',
+        jquery           : '/bower/jquery/jquery'
 	},
 	shim : {
-		mockjax : [ 'jquery' ]
+		mockjax : [ 'jquery' ],
+        backbone: {
+            deps: ['underscore', 'jquery'],
+            exports: 'Backbone'
+        },
+        underscore : {
+            exports: "_"
+        }
 	}
 } );
 
