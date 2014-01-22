@@ -3,14 +3,7 @@
 		"exclude" : ["./node/machina.js"]
 	},
 	"httpPaths" : {
-		"/lib"          : "./lib",
-		"/ext"          : "./ext",
-		"/src"          : "./src",
-		"/load"         : "./example/load",
-		"/atm"          : "./example/atm",
-		"/connectivity" : "./example/connectivity",
-		"/spec"         : "./spec",
-		"/"             : "./"
+		"/" : "./"
 	},
 	"anvil.jshint" : {
 		"all" : true
