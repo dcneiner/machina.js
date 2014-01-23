@@ -1,14 +1,14 @@
 require.config( {
 	paths : {
-		text             : "/bower/requirejs-text/text",
-		backbone         : '/bower/backbone/backbone',
-		underscore       : '/bower/underscore/underscore',
-		mockjax          : '/bower/jquery-mockjax/jquery.mockjax',
+		text             : "../../../bower/requirejs-text/text",
+		backbone         : '../../../bower/backbone/backbone',
+		underscore       : '../../../bower/underscore/underscore',
+		mockjax          : '../../../bower/jquery-mockjax/jquery.mockjax',
 		machina          : '/lib/machina',
-		'machina.postal' : '/bower/machina.postal/lib/machina.postal',
+		'machina.postal' : '../../../bower/machina.postal/lib/machina.postal',
 		postal           : '../../../bower/postal.js/lib/postal',
-		'postal.diags'   : '/ext/postal.diagnostics.min',
-        jquery           : '/bower/jquery/jquery'
+		'postal.diags'   : '../../../bower/postal.diagnostics/lib/postal.diagnostics.min',
+        jquery           : '../../../bower/jquery/jquery'
 	},
 	shim : {
 		mockjax : [ 'jquery' ],

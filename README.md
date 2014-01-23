@@ -250,9 +250,13 @@ var MyFsm = machina.Fsm.extend({ /* your stuff */});
 machina.js uses [gulp.js](http://gulpjs.com/) to build.
 
 * Install node.js (and consider using [nvm](https://github.com/creationix/nvm) to manage your node versions)
-* At the root of this repository, run `npm install` to install the dev dependencies.
-* Run `gulp` to build the project.
-* Build output will be placed in the lib folder.
+* run `npm install` & `bower install` to install all dependencies
+* To build, run `npm run build` - then check the lib folder for the output
+* To run tests & examples:
+    * To run node-based tests: `npm run test`
+    * To run browser-based tests & examples:
+        * run `npm start`
+        * navigate in your browser to <http://localhost:3080/>
 
 
 ## Release Notes
