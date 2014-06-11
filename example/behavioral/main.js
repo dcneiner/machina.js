@@ -48,9 +48,9 @@ var app = (function() {
         return stateA;
     });
 
-    x.register("ABC", function() {
-        return stateB;
-    });
+    // an accessor function will be provided under the hood
+    // if you just want to pass an object literal
+    x.register("ABC", stateB);
 
     x.on("#", function(d, e) {
         $("#" + d.clientId).append("<div><pre>" + JSON.stringify(e, null, 2) + "</pre></div>");
