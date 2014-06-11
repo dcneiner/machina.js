@@ -52,3 +52,10 @@
 
 * Fixed issue in `deferUntilNextHandler` where deferred inputs were being queued as `NEXT_TRANSITION` instead of `NEXT_HANDLER`.
 * Moved invocation of `on_Exit` to occur just *before* the state property is updated, instead of just after.
+
+### v0.4.0
+Major Changes!
+
+* `transition` event's action property now only shows the action/input handler name rather than `state + "." + action`
+* `nohandler` event no longer contains the arguments which were passed in.
+* Event handlers no longer execute callbacks with the FSM as the `this` context.

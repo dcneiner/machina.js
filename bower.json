@@ -1,11 +1,13 @@
 {
     "name": "machina.js",
-    "version": "0.3.6",
+    "version": "0.4.0-rc1",
     "main": [
         "lib/machina.js"
     ],
     "dependencies": {
-        "underscore": "~1.6.0"
+        "lodash": "~2.4.1",
+        "monologue.js": "^0.2.0",
+        "riveter": "git://github.com/ifandelse/riveter.git#0cffebb92117c88543cb4359fb9fd69c2d65dd22"
     },
     "devDependencies": {
         "jquery": "~1.10.2",

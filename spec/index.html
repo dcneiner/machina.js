@@ -6,9 +6,12 @@
 <body>
     <div id="mocha"></div>
 <script src="../bower/jquery/jquery.min.js"></script>
-<script src="../bower/underscore/underscore.js"></script>
+<script src="../bower/lodash/dist/lodash.js"></script>
+<script src="../bower/riveter/lib/riveter.js"></script>
+<script src="../bower/monologue.js/lib/monologue.js"></script>
 <script src="../bower/expect/expect.js"></script>
 <script src="../bower/mocha/mocha.js"></script>
+<script type="text/javascript" src="../lib/machina.js"></script>
 <script type="text/javascript">
     mocha.setup({
         ui: 'bdd',
@@ -16,7 +19,6 @@
         ignoreLeaks: true
     });
 </script>
-<script type="text/javascript" src="../lib/machina.js"></script>
 <script type="text/javascript" src="machina.utils.spec.js"></script>
 <script type="text/javascript" src="machina.fsm.spec.js"></script>
 <script type="text/javascript">
