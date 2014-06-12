@@ -1,56 +1,55 @@
 var app = (function() {
+    var store = {
+        "123": {},
+        ABC: {}
+    };
+
     var x = new machina.BehavioralFsm({
+
+        getClient: function(id) {
+            return store[id];
+        },
+
         states: {
             "uninitialized": {
-                _onEnter: function(state, client) {
-                    console.log("'uninitialized' entry action fired for " + client.id + ".");
+                _onEnter: function(state) {
+                    console.log("'uninitialized' entry action fired for " + state.__machina.id + ".");
                     state.unInitEntryActionHandler = true;
                 },
 
-                "initialize": function(payload, state, client) {
-                    console.log("handled an 'initialize' event for " + client.id + ".");
+                "initialize": function(payload, state) {
+                    console.log("handled an 'initialize' event for " + state.__machina.id + ".");
                     state.initInputHandler = true;
                 },
 
                 "started": "ready",
 
-                "deferredThingy": function(a, b, state, client) {
-                    console.log("deferring for " + client.id + ".");
-                    client.deferUntilTransition();
+                "deferredThingy": function(a, b, state) {
+                    console.log("deferring for " + state.__machina.id + ".");
+                    this.deferUntilTransition();
                 },
 
-                _onExit: function(state, client) {
-                    console.log("Uninitialized exit action fired for " + client.id + ".");
+                _onExit: function(state) {
+                    console.log("Uninitialized exit action fired for " + state.__machina.id + ".");
                     state.unInitExitActionHandler = true;
                 }
             },
 
             "ready": {
-                _onEnter: function(state, client) {
-                    console.log("'ready' entry action fired for " + client.id + ".");
+                _onEnter: function(state) {
+                    console.log("'ready' entry action fired for " + state.__machina.id + ".");
                     state.readyEntryActionHandler = true;
                 },
-                "*": function(payload, state, client) {
+                "*": function(payload, state) {
                     state.payloads = state.payloads || [];
                     state.payloads.push(payload);
                 },
-                "deferredThingy": function(a, b, state, client) {
-                    console.log("Replaying deferred event. Args are: " + a + " and " + b + " (for " + client.id + ".)");
+                "deferredThingy": function(a, b, state) {
+                    console.log("Replaying deferred event. Args are: " + a + " and " + b + " (for " + state.__machina.id + ".)");
                 }
             }
         }
     });
-
-    var stateA = {};
-    var stateB = {};
-
-    x.register("123", function() {
-        return stateA;
-    });
-
-    // an accessor function will be provided under the hood
-    // if you just want to pass an object literal
-    x.register("ABC", stateB);
 
     x.on("#", function(d, e) {
         $("#" + d.clientId).append("<div><pre>" + JSON.stringify(e, null, 2) + "</pre></div>");
@@ -58,10 +57,7 @@ var app = (function() {
 
     return {
         fsm: x,
-        clientState: {
-            a: stateA,
-            b: stateB
-        },
+        store: store,
         doThis: function() {
             x.handle("123", "initialize", "blah");
             x.handle("ABC", "deferredThingy", "bacon", "eggs");

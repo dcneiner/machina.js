@@ -1,38 +1,38 @@
 var postHandlerActions = function(fsm, client, evnt) {
     fsm.emit(HANDLED, evnt);
-    client.priorAction = client.currentAction;
-    client.currentAction = "";
-    BehavioralFsm.prototype.processQueue.call(fsm, client.id, NEXT_HANDLER);
+    client.__machina.priorAction = client.__machina.currentAction;
+    client.__machina.currentAction = "";
+    BehavioralFsm.prototype.processQueue.call(fsm, client.__machina.id, NEXT_HANDLER);
 };
 
 var handleExitActions = function(fsm, client) {
-    var curState = client.state;
+    var curState = client.__machina.state;
     if (fsm.states[curState] && fsm.states[curState]._onExit) {
         fsm.inExitHandler = true;
-        fsm.states[curState]._onExit.call(fsm, client.getState(), client);
+        fsm.states[curState]._onExit.call(fsm, client);
         fsm.inExitHandler = false;
     }
 };
 
 var handleEntryActions = function(fsm, client, newState) {
     if (fsm.states[newState]._onEnter) {
-        fsm.states[newState]._onEnter.call(fsm, client.getState(), client);
+        fsm.states[newState]._onEnter.call(fsm, client);
     }
 
-    if (client.targetReplayState === newState) {
+    if (client.__machina.targetReplayState === newState) {
         // should processQueue take either id OR client instance?
-        BehavioralFsm.prototype.processQueue.call(fsm, client.id, NEXT_TRANSITION);
+        BehavioralFsm.prototype.processQueue.call(fsm, client.__machina.id, NEXT_TRANSITION);
     }
 };
 
 var updateClientStateInfo = function(fsm, client, newState) {
-    client.targetReplayState = newState;
-    client.priorState = client.state;
-    client.state = newState;
+    client.__machina.targetReplayState = newState;
+    client.__machina.priorState = client.__machina.state;
+    client.__machina.state = newState;
     fsm.emit(TRANSITION, {
-        clientId: client.id,
-        fromState: client.priorState,
-        action: client.currentAction,
+        clientId: client.__machina.id,
+        fromState: client.__machina.priorState,
+        action: client.__machina.currentAction,
         toState: newState
     });
 };
@@ -49,7 +49,7 @@ var notifyNoHandler = function(fsm, clientId, inputType, state) {
 
 var getHandlerMeta = function(fsm, inputType, client) {
     var states = fsm.states;
-    var current = client.state;
+    var current = client.__machina.state;
     var handlerName = states[current][inputType] ? inputType : "*";
     var meta;
     if (states[current][inputType] || states[current]["*"] || fsm["*"]) {
@@ -61,7 +61,7 @@ var getHandlerMeta = function(fsm, inputType, client) {
             action: states[current][handlerName] ? handlerName : "*"
         };
     } else {
-        notifyNoHandler(fsm, client.id, inputType, current);
+        notifyNoHandler(fsm, client.__machina.id, inputType, current);
     }
     return meta;
 };
@@ -70,72 +70,81 @@ var invokeHandler = function(fsm, client, args, meta) {
     var states = fsm.states;
     var state;
     var nextState = typeof meta.handler === "string" ? meta.handler : undefined;
-    client.currentAction = meta.action;
+    client.__machina.currentAction = meta.action;
     fsm.emit(HANDLING, {
-        clientId: client.id,
+        clientId: client.__machina.id,
         inputType: meta.inputType,
         args: args.slice(1)
     });
     if (typeof meta.handler === "function") {
-        state = client.getState();
-        var handlerArgs = (meta.catchAll ? args.slice(1) : args.slice(2)).concat([state, client]);
-        client.currentActionArgs = args;
+        var handlerArgs = (meta.catchAll ? args.slice(1) : args.slice(2)).concat([client]);
+        client.__machina.currentActionArgs = args;
+        var oldDfrTrans = fsm.deferUntilTransition;
+        var oldDfrHndlr = fsm.deferUntilNextHandler;
+        fsm.deferUntilTransition = client.__machina.deferUntilTransition;
+        fsm.deferUntilNextHandler = client.__machina.deferUntilNextHandler;
         nextState = meta.handler.apply(fsm, handlerArgs);
-        client.currentActionArgs = undefined;
+        fsm.deferUntilTransition = oldDfrTrans;
+        fsm.deferUntilNextHandler = oldDfrHndlr;
+        client.__machina.currentActionArgs = undefined;
     }
 
     if (nextState) {
-        BehavioralFsm.prototype.transition.call(fsm, client.id, nextState);
+        BehavioralFsm.prototype.transition.call(fsm, client.__machina.id, nextState);
     }
 };
 
 BehavioralFsm = function(options) {
-    _.extend(this, {
-        clients: {}
-    }, options);
+    _.merge(this, options);
     _.defaults(this, utils.getDefaultOptions());
     this.initialize.apply(this, arguments);
     machina.emit(NEW_FSM, this);
 };
 
 _.extend(BehavioralFsm.prototype, {
+
     initialize: function() {},
 
-    register: function(id, accessor, options) {
-        options = options || {};
-        var _accessor = (typeof accessor === "function") ? accessor : function() {
-                return accessor;
-            };
-        var client;
-        if (!this.clients[id]) {
-            client = this.clients[id] = _.defaults(
-                options.clientMeta || {}, {
-                    getState: _accessor,
-                    deferUntilTransition: this.deferUntilTransition.bind(this, id),
-                    deferUntilNextHandler: this.deferUntilNextHandler.bind(this, id),
-                    id: id
-                },
-                utils.getDefaultClientMeta()
-            );
-            if (!options.doNotStart && !client.state && this.initialState) {
-                this.transition(id, this.initialState);
-            }
+    getClient: function(id) {
+        throw new Error("You need to tell this FSM how to get a client instance by providing a getClient implementation.");
+    },
+
+    getClientMeta: function(client) {
+        return client.__machina ? client.__machina : (client.__machina = {});
+    },
+
+    register: function(id, client) {
+        var meta = this.getClientMeta(client);
+        meta = _.defaults(
+            this.getClientMeta(client), {
+                deferUntilTransition: this.deferUntilTransition.bind(this, id),
+                deferUntilNextHandler: this.deferUntilNextHandler.bind(this, id),
+                id: id
+            },
+            utils.getDefaultClientMeta()
+        );
+        if (this.initialState && !meta.state) {
+            this.transition(id, this.initialState);
         }
     },
 
-    unregister: function(id) {
-        delete this.clients[id];
+    start: function(id) {
+        this.register(id, this.getClient(id));
     },
 
     handle: function(id, inputType) {
-        var client = this.clients[id];
+        var client = this.getClient(id);
         var args = slice.call(arguments, 0);
-        var meta;
+        var clientMeta = this.getClientMeta(client);
+        var handlerMeta;
         if (!client) {
-            throw new Error("Client id: " + id + " has not been registered with this FSM.");
+            throw new Error("Could not find client id: " + id + ".");
         }
-        if (!client.inExitHandler && (meta = getHandlerMeta(this, inputType, client))) {
-            invokeHandler(this, client, args, meta);
+        if (!clientMeta || (clientMeta && !clientMeta.registered)) {
+            this.register(id, client);
+        }
+        if (!clientMeta.inExitHandler && (handlerMeta = getHandlerMeta(this, inputType, client))) {
+            invokeHandler(this, client, args, handlerMeta);
             postHandlerActions(this, client, {
                 clientId: id,
                 inputType: inputType,
@@ -145,17 +154,23 @@ _.extend(BehavioralFsm.prototype, {
     },
 
     transition: function(id, newState) {
-        var client = this.clients[id];
-        var curState = client.state;
+        var client = this.getClient(id);
         var info;
-        if (!client.inExitHandler && newState !== client.state) {
+        if (!client) {
+            throw new Error("Could not find client id: " + id + ".");
+        }
+        if (!client.__machina || (client.__machina && !client.__machina.registered)) {
+            this.register(id, client);
+        }
+        var curState = client.__machina.state;
+        if (!client.__machina.inExitHandler && newState !== client.__machina.state) {
             if (this.states[newState]) {
                 handleExitActions(this, client);
                 updateClientStateInfo(this, client, newState);
                 handleEntryActions(this, client, newState);
             } else {
                 info = {
-                    state: this.state,
+                    state: client.__machina.state,
                     attemptedState: newState
                 };
                 this.emit.call(this, INVALID_STATE, info);
@@ -164,23 +179,23 @@ _.extend(BehavioralFsm.prototype, {
     },
 
     processQueue: function(id, type) {
-        var client = this.clients[id];
+        var client = this.getClient(id);
         var filterFn = type === NEXT_TRANSITION ? function(item) {
-                return item.type === NEXT_TRANSITION && ((!item.untilState) || (item.untilState === client.state));
+                return item.type === NEXT_TRANSITION && ((!item.untilState) || (item.untilState === client.__machina.state));
             } : function(item) {
                 return item.type === NEXT_HANDLER;
             };
-        var toProcess = _.filter(client.inputQueue, filterFn);
-        client.inputQueue = _.difference(client.inputQueue, toProcess);
+        var toProcess = _.filter(client.__machina.inputQueue, filterFn);
+        client.__machina.inputQueue = _.difference(client.__machina.inputQueue, toProcess);
         _.each(toProcess, function(item) {
             BehavioralFsm.prototype.handle.apply(this, item.args);
         }, this);
     },
 
     clearQueue: function(id, type, name) {
-        var client = (typeof id !== "object") ? this.clients[id] : id;
+        var client = (typeof id !== "object") ? this.getClient(id) : id;
         if (!type) {
-            client.inputQueue = [];
+            client.__machina.inputQueue = [];
         } else {
             var filter;
             if (type === NEXT_TRANSITION) {
@@ -192,37 +207,35 @@ _.extend(BehavioralFsm.prototype, {
                     return evnt.type === NEXT_HANDLER;
                 };
             }
-            client.inputQueue = _.filter(client.inputQueue, filter);
+            client.__machina.inputQueue = _.filter(client.__machina.inputQueue, filter);
         }
     },
 
     deferUntilTransition: function(id, stateName) {
-        var client = this.clients[id];
-        if (client.currentActionArgs) {
-            var queued = {
-                type: NEXT_TRANSITION,
-                untilState: stateName,
-                args: client.currentActionArgs
-            };
-            client.inputQueue.push(queued);
-            this.emit(DEFERRED, {
-                clientId: client.id,
-                state: client.state,
-                queuedArgs: queued
-            });
-        }
+        var client = this.getClient(id);
+        var queued = {
+            type: NEXT_TRANSITION,
+            untilState: stateName,
+            args: client.__machina.currentActionArgs
+        };
+        client.__machina.inputQueue.push(queued);
+        this.emit(DEFERRED, {
+            clientId: client.__machina.id,
+            state: client.__machina.state,
+            queuedArgs: queued
+        });
     },
 
     deferUntilNextHandler: function(id) {
-        var client = this.clients[id];
-        if (client.currentActionArgs) {
+        var client = this.getClient(id);
+        if (client.__machina.currentActionArgs) {
             var queued = {
                 type: NEXT_HANDLER,
-                args: client.currentActionArgs
+                args: client.__machina.currentActionArgs
             };
-            client.inputQueue.push(queued);
+            client.__machina.inputQueue.push(queued);
             this.emit(DEFERRED, {
-                state: client.state,
+                state: client.__machina.state,
                 queuedArgs: queued
             });
         }

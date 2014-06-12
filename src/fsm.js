@@ -4,15 +4,7 @@ var Fsm = BehavioralFsm.extend({
 
         var id = this.namespace;
 
-        // We pass the FSM in as the clientMeta object
-        // so that the normal FSM-related state and
-        // action metadata will be present on the instance
-        this.register(id, function() {
-            return this;
-        }, {
-            clientMeta: this,
-            doNotStart: true
-        });
+        this.__machina = this;
 
         // need to curry id into prototype method calls
         // as instance level methods since this is a 
@@ -32,6 +24,10 @@ var Fsm = BehavioralFsm.extend({
             this.transition(this.initialState);
         }
 
+    },
+
+    getClient: function(id) {
+        return this;
     }
 }, {}, {
     deep: true

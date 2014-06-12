@@ -31,7 +31,8 @@ var utils = {
             priorState: undefined,
             priorAction: undefined,
             state: undefined,
-            targetReplayState: undefined
+            targetReplayState: undefined,
+            registered: true
         };
     }
 };
