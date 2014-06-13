@@ -4,8 +4,6 @@ var Fsm = BehavioralFsm.extend({
 
         var id = this.namespace;
 
-        this.__machina = this;
-
         // need to curry id into prototype method calls
         // as instance level methods since this is a 
         // one-client FSM like pre v0.4 machina
@@ -15,18 +13,20 @@ var Fsm = BehavioralFsm.extend({
             "processQueue",
             "clearQueue",
             "deferUntilTransition",
-            "deferUntilNextHandler"
+            "deferUntilNextHandler",
         ], function(method) {
             this[method] = this[method].bind(this, id);
         }, this);
 
-        if (this.initialState) {
-            this.transition(this.initialState);
-        }
+        BehavioralFsm.prototype.register.call(this, id, this);
 
     },
 
     getClient: function(id) {
+        return this;
+    },
+
+    getClientMeta: function() {
         return this;
     }
 }, {}, {

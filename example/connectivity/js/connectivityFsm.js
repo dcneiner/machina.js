@@ -1,7 +1,7 @@
 define([
     'jquery',
     'machina',
-    'underscore'
+    'lodash'
 ], function($, machina, _) {
 
     var useStethoscope = function(fsm, steth) {
@@ -46,26 +46,26 @@ define([
                     }
                     this.stethoscope.checkHeartbeat();
                 },
-                heartbeat      : "online",
-                "no-heartbeat" : "disconnected",
-                "go.offline"   : "offline",
+                heartbeat: "online",
+                "no-heartbeat": "disconnected",
+                "go.offline": "offline",
                 "*": function() {
                     this.deferUntilTransition();
                 }
             },
 
             online: {
-                "window.offline"  : "probing",
-                "appCache.error"  : "probing",
-                "request.timeout" : "probing",
-                "go.offline"      : "offline"
+                "window.offline": "probing",
+                "appCache.error": "probing",
+                "request.timeout": "probing",
+                "go.offline": "offline"
             },
 
             disconnected: {
-                "window.online"        : "probing",
-                "appCache.downloading" : "probing",
-                "go.online"            : "probing",
-                "go.offline"           : "offline"
+                "window.online": "probing",
+                "appCache.downloading": "probing",
+                "go.online": "probing",
+                "go.offline": "offline"
             },
 
             offline: {
