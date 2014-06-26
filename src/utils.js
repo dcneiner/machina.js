@@ -8,6 +8,7 @@ var TRANSITION = "transition";
 var INVALID_STATE = "invalidstate";
 var DEFERRED = "deferred";
 var NEW_FSM = "newfsm";
+var REGISTERED = "registered";
 var utils = {
     makeFsmNamespace: (function() {
         var machinaCount = 0;

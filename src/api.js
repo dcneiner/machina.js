@@ -1,8 +1,10 @@
 var machina = _.extend({
 
-    BehavioralFsm: BehavioralFsm,
+    Functional: Functional,
 
     Fsm: Fsm,
+
+    Async: Async,
 
     utils: utils
 

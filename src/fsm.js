@@ -1,25 +1,32 @@
-var Fsm = BehavioralFsm.extend({
-    constructor: function(name, title, salary, shouldExpectFbiRaid) {
+var Fsm = Functional.extend({
+    constructor: function() {
         Fsm.prototype.constructor.__super.apply(this, arguments);
+        this.register();
+    },
 
-        var id = this.namespace;
+    getHandlerArgs: function(args) {
+        // The 'classic' machina.Fsm does NOT
+        // pass the `client` argument to input
+        // handlers.
+        return slice.call(args, 2);
+    },
 
-        // need to curry id into prototype method calls
-        // as instance level methods since this is a 
-        // one-client FSM like pre v0.4 machina
-        _.each([
-            "handle",
-            "transition",
-            "processQueue",
-            "clearQueue",
-            "deferUntilTransition",
-            "deferUntilNextHandler",
-        ], function(method) {
-            this[method] = this[method].bind(this, id);
-        }, this);
+    handle: function() {
+        var args = slice.call(arguments, 0);
+        return Functional.prototype.handle.apply(
+            this, (args[0] === this) ? args : [this].concat(args)
+        );
+    },
 
-        BehavioralFsm.prototype.register.call(this, id, this);
+    transition: function(newState) {
+        var args = slice.call(arguments, 0);
+        return Functional.prototype.transition.apply(
+            this, (args[0] === this) ? args : [this].concat(args)
+        );
+    },
 
+    register: function() {
+        return Functional.prototype.register.call(this, this);
     },
 
     getClient: function(id) {

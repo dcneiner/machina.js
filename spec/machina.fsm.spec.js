@@ -114,8 +114,7 @@
                 it("handling event should be the correct structure", function() {
                     expect(payloads.handlingHandler).to.eql({
                         clientId: xfsm.namespace,
-                        inputType: 'event3',
-                        args: ['event3']
+                        inputType: 'event3'
                     });
                 });
                 it("should fire the handled event", function() {
@@ -124,8 +123,7 @@
                 it("handled event should be the correct structure", function() {
                     expect(payloads.handledHandler).to.eql({
                         clientId: 'fsm.2',
-                        inputType: 'event3',
-                        args: []
+                        inputType: 'event3'
                     });
                 });
                 it("should fire the CustomEvent event", function() {
@@ -149,6 +147,7 @@
                 });
                 it("invalidstate event should be the correct structure", function() {
                     expect(payloads.invalidStateHandler).to.eql({
+                        clientId: xfsm.namespace,
                         state: 'initialized',
                         attemptedState: 'NoSuchState'
                     });
@@ -465,22 +464,26 @@
         });
 
         describe("When using string handler values instead of functions", function() {
-            var transitioned = false;
-            var fsm = new machina.Fsm({
-                initialState: "notstarted",
-                states: {
-                    notstarted: {
-                        "start": "started"
-                    },
-                    started: {
-                        _onEnter: function() {
-                            transitioned = true;
+            var transitioned;
+            var fsm;
+            before(function() {
+                transitioned = false;
+                fsm = new machina.Fsm({
+                    initialState: "notstarted",
+                    states: {
+                        notstarted: {
+                            "start": "started"
+                        },
+                        started: {
+                            _onEnter: function() {
+                                transitioned = true;
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            fsm.handle("start");
+                fsm.handle("start");
+            });
 
             it("should transition into the started state", function() {
                 expect(transitioned).to.be(true);
@@ -488,24 +491,28 @@
         });
 
         describe("When using handler function that return string values", function() {
-            var transitioned = false;
-            var fsm = new machina.Fsm({
-                initialState: "notstarted",
-                states: {
-                    notstarted: {
-                        "start": function() {
-                            return "started";
-                        }
-                    },
-                    started: {
-                        _onEnter: function() {
-                            transitioned = true;
+            var transitioned;
+            var fsm;
+            before(function() {
+                transitioned = false;
+                fsm = new machina.Fsm({
+                    initialState: "notstarted",
+                    states: {
+                        notstarted: {
+                            "start": function() {
+                                return "started";
+                            }
+                        },
+                        started: {
+                            _onEnter: function() {
+                                transitioned = true;
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            fsm.handle("start");
+                fsm.handle("start");
+            });
 
             it("should transition into the started state", function() {
                 expect(transitioned).to.be(true);

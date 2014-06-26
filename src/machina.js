@@ -16,8 +16,9 @@
     }
 }(this, function(_, Monologue, riveter, global, undefined) {
     //import("utils.js");
-    //import("BehavioralFsm.js");
-    //import("Fsm.js");
+    //import("FunctionalFsm.js");
+    //import("fsm.js");
+    //import("AsyncFsm.js");
     //import("api.js");
     return machina;
 }));
