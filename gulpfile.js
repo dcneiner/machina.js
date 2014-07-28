@@ -33,7 +33,6 @@ gulp.task( "combine", function() {
 			indentSize: 4
 		} ) )
 		.pipe( gulp.dest( "./lib/" ) )
-		.pipe( gulp.dest( "./lib/" ) )
 		.pipe( uglify( {
 			compress: {
 				negate_iife: false
@@ -46,12 +45,10 @@ gulp.task( "combine", function() {
 		.pipe( gulp.dest( "./lib/" ) );
 } );
 
-gulp.task( "default", function() {
-	gulp.run( "combine" );
-} );
+gulp.task("default", ["combine"]);
 
 gulp.task( "report", function() {
-	gulp.src( "./lib/machina.js" )
+	return gulp.src( "./lib/machina.js" )
 		.pipe( plato( "report" ) );
 } );
 
@@ -70,10 +67,8 @@ var createServers = function( port ) {
 
 var servers;
 
-gulp.task( "server", [ "combine", "report" ], function() {
-	if ( !servers ) {
-		servers = createServers( port );
-	}
+gulp.task( "server", [ "combine" ], function() {
+	servers = createServers( port );
 
 	open( "http://localhost:" + port + "/index.html" );
 } );

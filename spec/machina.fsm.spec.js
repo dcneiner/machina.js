@@ -57,38 +57,32 @@
                     },
                     eventListeners: {
                         "nohandler": [
-
-        function( x ) {
+                            function( x ) {
                                 events.noHandlerInvoked = true;
                                 payloads.noHandler = x;
                             } ],
                         "transition": [
-
-        function( x ) {
+                            function( x ) {
                                 events.transitionedHandler = true;
                                 payloads.transitionedHandler = x;
                             } ],
                         "handling": [
-
-        function( x ) {
+                            function( x ) {
                                 events.handlingHandler = true;
                                 payloads.handlingHandler = x;
                             } ],
                         "handled": [
-
-        function( x ) {
+                            function( x ) {
                                 events.handledHandler = true;
                                 payloads.handledHandler = x;
                             } ],
                         "invalidstate": [
-
-        function( x ) {
+                            function( x ) {
                                 events.invalidStateHandler = true;
                                 payloads.invalidStateHandler = x;
                             } ],
                         "CustomEvent": [
-
-        function( x ) {
+                            function( x ) {
                                 events.customEventInvoked = true;
                                 payloads.customEvent = x;
                             } ]
@@ -105,37 +99,40 @@
                 } );
                 it( "transition event should be the correct structure", function() {
                     expect( payloads.transitionedHandler ).to.eql( {
-                        fromState: "uninitialized",
-                        action: "uninitialized.event1",
-                        toState: "initialized"
+                        clientId: 'fsm.2',
+                        fromState: 'uninitialized',
+                        action: 'event1',
+                        toState: 'initialized'
                     } );
                 } );
                 it( "should fire the nohandler event", function() {
                     expect( events.noHandlerInvoked ).to.be( true );
                 } );
                 it( "nohandler event should be the correct structure", function() {
-                    expect( payloads.noHandler ).to.eql( {
+                    expect( payloads.noHandler ).to.eql({
+                        state: 'uninitialized',
+                        clientId: 'fsm.2',
                         inputType: 'nothingwillgetthis',
-                        args: [ 'Testing 123' ]
-                    } );
+                        type: 'nohandler'
+                    });
                 } );
                 it( "should fire the handling event", function() {
                     expect( events.handlingHandler ).to.be( true );
                 } );
                 it( "handling event should be the correct structure", function() {
-                    expect( payloads.handlingHandler ).to.eql( {
-                        inputType: 'event3',
-                        args: []
-                    } );
+                    expect( payloads.handlingHandler ).to.eql({
+                        clientId: 'fsm.2',
+                        inputType: 'event3'
+                    });
                 } );
                 it( "should fire the handled event", function() {
                     expect( events.handledHandler ).to.be( true );
                 } );
                 it( "handled event should be the correct structure", function() {
-                    expect( payloads.handledHandler ).to.eql( {
-                        inputType: 'event3',
-                        args: []
-                    } );
+                    expect( payloads.handledHandler ).to.eql({
+                        clientId: 'fsm.2',
+                        inputType: 'event3'
+                    });
                 } );
                 it( "should fire the CustomEvent event", function() {
                     expect( events.customEventInvoked ).to.be( true );
@@ -158,9 +155,10 @@
                 } );
                 it( "invalidstate event should be the correct structure", function() {
                     expect( payloads.invalidStateHandler ).to.eql( {
+                        clientId: 'fsm.2',
                         state: 'initialized',
                         attemptedState: 'NoSuchState'
-                    } );
+                    });
                 } );
                 it( "should have invoked handlers", function() {
                     expect( !!event1 ).to.be( true );
@@ -177,7 +175,7 @@
                     var context;
                     fsm.on( "transition", function() {
                         context = this;
-                    } );
+                    } ).withContext(fsm);
 
                     fsm.transition( "sample" );
                     expect( context ).to.be( fsm );
@@ -196,14 +194,11 @@
                 it( "state should default to uninitialized", function() {
                     expect( fsm.state ).to.be( "uninitialized" );
                 } );
-                it( "events should default to 1 empty arrays", function() {
-                    expect( fsm.eventListeners[ "*" ].length ).to.be( 0 );
-                } );
                 it( "namespace should default to expected pattern", function() {
                     expect( rgx.test( fsm.namespace ) ).to.be( true );
                 } );
                 it( "event queue should be empty", function() {
-                    expect( fsm.eventQueue.length ).to.be( 0 );
+                    expect( fsm.inputQueue.length ).to.be( 0 );
                 } );
                 it( "targetReplayState should be uninitialized", function() {
                     expect( fsm.targetReplayState ).to.be( "uninitialized" );
@@ -212,39 +207,47 @@
                     expect( fsm.priorState === undefined ).to.be( true );
                 } );
                 it( "prior action should be empty", function() {
-                    expect( fsm._priorAction ).to.be( "" );
+                    expect( fsm.priorAction ).to.be( undefined );
                 } );
                 it( "current action should be empty", function() {
-                    expect( fsm._currentAction ).to.be( "" );
+                    expect( fsm.currentAction ).to.be( undefined );
                 } );
             } );
 
             describe( "When providing an initialize function", function() {
-                var counter = 0;
-                var initializeInvoked = 0;
-                var onEnterInvoked = 0;
-                var newFsmInvoked = 0;
-                var newFsmFn = machina.on( "newfsm", function() {
-                    newFsmInvoked = counter;
-                    counter++;
-                    machina.off( "newfsm", newFsmFn );
-                } );
-                fsm = new machina.Fsm( {
-                    states: {
-                        uninitialized: {
-                            _onEnter: function() {
-                                onEnterInvoked = counter;
-                                counter++;
-                            }
-                        }
-                    },
-                    initialize: function() {
-                        initializeInvoked = counter;
+                var counter;
+                var initializeInvoked;
+                var onEnterInvoked;
+                var newFsmInvoked;
+                var newFsmFn;
+                var fsmCheck;
+                before(function(){
+                    counter = 0;
+                    initializeInvoked = 0;
+                    onEnterInvoked = 0;
+                    newFsmInvoked = 0;
+                    newFsmFn = machina.on( "newfsm", function(data) {
+                        newFsmInvoked = counter;
                         counter++;
-                    }
-                } );
+                        fsmCheck = data;
+                    } ).once();
+                    fsm = new machina.Fsm( {
+                        states: {
+                            uninitialized: {
+                                _onEnter: function() {
+                                    onEnterInvoked = counter;
+                                    counter++;
+                                }
+                            }
+                        },
+                        initialize: function() {
+                            initializeInvoked = counter;
+                            counter++;
+                        }
+                    } );
+                });
                 it( "should have returned the subscriber callback when calling machina.on", function() {
-
+                    expect( fsmCheck ).to.be(fsm);
                 } );
                 it( "should have executed initialize, newfsm and transition in proper order", function() {
                     expect( initializeInvoked ).to.be( 0 );
@@ -588,11 +591,12 @@
                 expect( transitioned ).to.be( true );
             } );
             it( "transition's action should be the initial handler", function() {
-                expect( transitionPayload ).to.eql( {
-                    fromState: "notstarted",
-                    action: "notstarted.delegate",
-                    toState: "started"
-                } );
+                expect( transitionPayload ).to.eql({
+                    clientId: 'fsm.12',
+                    fromState: 'notstarted',
+                    action: 'start',
+                    toState: 'started'
+                });
             } );
 
         } );
@@ -622,7 +626,6 @@
             it( "should produce an FSM instance", function() {
                 expect( typeof fsm.transition ).to.be( 'function' );
                 expect( typeof fsm.processQueue ).to.be( 'function' );
-                expect( typeof fsm.trigger ).to.be( 'function' );
                 expect( typeof fsm.emit ).to.be( 'function' );
                 expect( typeof fsm.on ).to.be( 'function' );
                 expect( typeof fsm.off ).to.be( 'function' );
@@ -641,13 +644,13 @@
                 states: {
                     "notStarted": {
                         start: function() {
-                            this.trigger( "customAEvent" );
+                            this.emit( "customAEvent" );
                             this.transition( "started" );
                         }
                     },
                     "started": {
                         finish: function() {
-                            this.trigger( "customBEvent" );
+                            this.emit( "customBEvent" );
                             this.transition( "finished" );
                         }
                     },
@@ -717,7 +720,6 @@
             it( "should produce an FSM instance", function() {
                 expect( typeof fsm.transition ).to.be( 'function' );
                 expect( typeof fsm.processQueue ).to.be( 'function' );
-                expect( typeof fsm.trigger ).to.be( 'function' );
                 expect( typeof fsm.emit ).to.be( 'function' );
                 expect( typeof fsm.on ).to.be( 'function' );
                 expect( typeof fsm.off ).to.be( 'function' );

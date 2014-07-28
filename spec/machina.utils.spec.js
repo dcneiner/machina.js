@@ -16,9 +16,6 @@
 			it( "initialState should default to uninitialized", function() {
 				expect( options.initialState ).to.be( "uninitialized" );
 			} );
-			it( "events should default to 1 empty arrays", function() {
-				expect( options.eventListeners[ "*" ].length ).to.be( 0 );
-			} );
 			it( "states should default to empty object", function() {
 				expect( _.isEmpty( options.state ) ).to.be( true );
 			} );
@@ -27,24 +24,6 @@
 			} );
 			it( "states object should be empty", function() {
 				expect( _.isEmpty( options.states ) ).to.be( true );
-			} );
-			it( "event queue should be empty", function() {
-				expect( options.eventQueue.length ).to.be( 0 );
-			} );
-			it( "targetReplayState should be empty", function() {
-				expect( options.targetReplayState ).to.be( "" );
-			} );
-			it( "state should be undefined", function() {
-				expect( options.state === undefined ).to.be( true );
-			} );
-			it( "prior state should be undefined", function() {
-				expect( options.priorState === undefined ).to.be( true );
-			} );
-			it( "prior action should be empty", function() {
-				expect( options._priorAction ).to.be( "" );
-			} );
-			it( "current action should be empty", function() {
-				expect( options._currentAction ).to.be( "" );
 			} );
 		} );
 	} );
