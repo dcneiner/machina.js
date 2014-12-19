@@ -15,6 +15,8 @@
 }( this, function( _, global, undefined ) {
 	//import("utils.js");
 	//import("fsm.js");
+	//import("BehavioralFsm.js");
+	//import("NewFsm.js");
 	//import("api.js");
 	return machina;
-} ) );
+} ));
