@@ -1,5 +1,7 @@
 var machina = {
-	Fsm: Fsm,
+	Fsm: NewFsm,
+	BehavioralFsm: BehavioralFsm,
+	NewFsm: NewFsm,
 	utils: utils,
 	on: function( eventName, callback ) {
 		if ( !this.eventListeners[ eventName ] ) {
@@ -15,7 +17,8 @@ var machina = {
 	},
 	trigger: function( eventName ) {
 		var i = 0,
-			len, args = arguments,
+			len,
+			args = arguments,
 			listeners = this.eventListeners[ eventName ] || [];
 		if ( listeners && listeners.length ) {
 			_.each( listeners, function( callback ) {
