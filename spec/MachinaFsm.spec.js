@@ -21,7 +21,7 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 					fsm.namespace.should.match( /fsm\.[0-9]*/ );
 				} );
 				it( "should default to empty states object", function() {
-					fsm.states.should.be.empty;
+					fsm.states.should.eql( { uninitialized: {} } );
 				} );
 			} );
 			describe( "and passing in options", function() {
@@ -40,6 +40,16 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 				} );
 				it( "should set the expected states and input handlers", function() {
 					fsm.states.should.eql( fsmFactory.options.states );
+				} );
+				it( "should throw if the initialState prop isn't set", function() {
+					( function() {
+						var fsm = fsmFactory.instanceWithOptions( { initialState: null } );
+					} ).should.throw( /You must specify an initial state for this FSM/ );
+				} );
+				it( "should throw if the initial state specified doesn't exist", function() {
+					( function() {
+						var fsm = fsmFactory.instanceWithOptions( { initialState: "howdy" } );
+					} ).should.throw( /The initial state specified does not exist in the states object/ );
 				} );
 			} );
 			describe( "When acting on itself as the client", function() {
@@ -77,7 +87,22 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 					} );
 					events[ 2 ].should.eql( { eventName: "ready-OnEnterFiring", data: undefined } );
 				} );
-				it( "should handle deferred input properly", function() {
+				it( "should emit an 'invalidstate' event when attempting to transition into a non-existent state", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var events = [];
+					fsm.on( "invalidstate", function( data ) {
+						events.push( { eventName: "invalidstate", data: data } );
+					} );
+					fsm.transition( "gotoIsntHarmful" );
+					events[ 0 ].should.eql( {
+						eventName: "invalidstate",
+						data: {
+							state: "uninitialized",
+							attemptedState: "gotoIsntHarmful"
+						}
+					} );
+				} );
+				it( "should handle deferred-until-transition input properly", function() {
 					var fsm = fsmFactory.instanceWithOptions();
 					var events = [];
 					fsm.on( "*", function( evnt, data ) {
@@ -166,6 +191,219 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 							}
 					} ] );
 				} );
+				it( "should clear queued input when calling clearQueue", function() {
+					var fsm = fsmFactory.instanceWithOptions( {
+						states: {
+							uninitialized: {
+								anotherInputHandler: function() {
+									this.clearQueue();
+								}
+							}
+						}
+					} );
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					fsm.handle( "letsDoThis" );
+					fsm.inputQueue.should.eql( [
+						{
+							type: "transition",
+							untilState: "ready",
+							args: [ "letsDoThis" ]
+						}
+					] );
+					fsm.handle( "anotherInputHandler" );
+					fsm.handle( "start" );
+					events.should.eql( [
+						{ eventName: "handling",
+							data: { client: fsm, inputType: "letsDoThis" } },
+						{ eventName: "deferred",
+							data: { state: "uninitialized", queuedArgs: {
+									"type": "transition",
+									"untilState": "ready",
+									"args": [
+										"letsDoThis"
+									]
+								} } },
+						{ eventName: "handled",
+							data: { client: fsm, inputType: "letsDoThis" } },
+						{ eventName: "handling",
+							data: { client: fsm, inputType: "anotherInputHandler" } },
+						{ eventName: "handled",
+							data: { client: fsm, inputType: "anotherInputHandler" } },
+						{ eventName: "handling",
+							data: { client: fsm, inputType: "start" } },
+						{ eventName: "transition",
+							data:
+							{ fromState: "uninitialized",
+								action: "uninitialized.start",
+								toState: "ready" } },
+						{ eventName: "ready-OnEnterFiring", data: undefined },
+						{ eventName: "handled",
+						data: { client: fsm, inputType: "start" } } ] );
+					fsm.inputQueue.should.eql( [] );
+				} );
+				it( "should clear relevant queued input when calling clearQueue & passing the target state", function() {
+					var fsm = fsmFactory.instanceWithOptions( {
+						states: {
+							uninitialized: {
+								deferMeUntilDone: function() {
+									this.deferUntilTransition( "done" );
+								},
+								deferMeUntilNotQuiteDone: function() {
+									this.deferUntilTransition( "notQuiteDone" );
+								}
+							}
+						}
+					} );
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					fsm.handle( "deferMeUntilDone" );
+					fsm.handle( "deferMeUntilNotQuiteDone" );
+					fsm.inputQueue.should.eql( [
+						{
+							"type": "transition",
+							"untilState": "done",
+							"args": [
+								"deferMeUntilDone"
+							]
+						},
+						{
+							"type": "transition",
+							"untilState": "notQuiteDone",
+							"args": [
+								"deferMeUntilNotQuiteDone"
+							]
+						}
+					] );
+					fsm.clearQueue( "done" );
+					fsm.inputQueue.should.eql( [
+						{
+							"type": "transition",
+							"untilState": "notQuiteDone",
+							"args": [
+								"deferMeUntilNotQuiteDone"
+							]
+						}
+					] );
+				} );
+				it( "should emit a nohandler event if an invalid input name is used", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					fsm.handle( "nope" );
+					events[ 0 ].eventName.should.equal( "nohandler" );
+				} );
+			} );
+			describe( "When emitting events", function() {
+				it( "should allow wildcard subscribers", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					fsm.handle( "start" );
+					events.map( function( evnt ) {
+						return evnt.eventName;
+					} ).should.eql( [ "handling", "transition", "ready-OnEnterFiring", "handled" ] );
+				} );
+				it( "should allow specific events to be subscribed to", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var eventsA = [];
+					var eventsB = [];
+					fsm.on( "ready-OnEnterFiring", function( data ) {
+						eventsA.push( { eventName: "ready-OnEnterFiring", data: data } );
+					} );
+					fsm.on( "transition", function( data ) {
+						eventsB.push( { eventName: "transition", data: data } );
+					} );
+					fsm.handle( "start" );
+					eventsA.should.eql( [ { eventName: "ready-OnEnterFiring", data: undefined } ] );
+					eventsB.should.eql( [
+						{
+							eventName: "transition",
+							data: {
+								fromState: "uninitialized",
+								action: "uninitialized.start",
+								toState: "ready"
+							}
+						}
+					] );
+				} );
+				it( "should clear all subscribers when off() is called without arguments", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var eventsA = [];
+					var eventsB = [];
+					fsm.on( "ready-OnEnterFiring", function( evnt, data ) {
+						eventsA.push( { eventName: evnt, data: data } );
+					} );
+					fsm.on( "transition", function( evnt, data ) {
+						eventsB.push( { eventName: evnt, data: data } );
+					} );
+					fsm.off();
+					fsm.handle( "start" );
+					eventsA.should.eql( [] );
+					eventsB.should.eql( [] );
+				} );
+				it( "should clear the correct subscriber when off() is called with event name & callback", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var eventsA = [];
+					var eventsB = [];
+					var callback = function( data ) {
+						eventsA.push( { eventName: "ready-OnEnterFiring", data: data } );
+					};
+					fsm.on( "ready-OnEnterFiring", callback );
+					fsm.on( "ready-OnEnterFiring", function( data ) {
+						eventsB.push( { eventName: "ready-OnEnterFiring", data: data } );
+					} );
+					fsm.off( "ready-OnEnterFiring", callback );
+					fsm.handle( "start" );
+					eventsA.should.eql( [] );
+					eventsB.should.eql( [ { eventName: "ready-OnEnterFiring", data: undefined } ] );
+				} );
+				it( "should clear the correct subscriber when using the on() return value", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var eventsA = [];
+					var eventsB = [];
+					var sub = fsm.on( "ready-OnEnterFiring", function( data ) {
+						eventsA.push( { eventName: "ready-OnEnterFiring", data: data } );
+					} );
+					fsm.on( "ready-OnEnterFiring", function( data ) {
+						eventsB.push( { eventName: "ready-OnEnterFiring", data: data } );
+					} );
+					sub.off();
+					fsm.handle( "start" );
+					eventsA.should.eql( [] );
+					eventsB.should.eql( [ { eventName: "ready-OnEnterFiring", data: undefined } ] );
+				} );
+				it( "should only log an exception if subscriber throws and useSafeEmit is set to true", function() {
+					var fsm = fsmFactory.instanceWithOptions( { useSafeEmit: true } );
+					var log = console.log;
+					var res;
+					console.log = function( msg ) {
+						res = msg;
+					};
+					fsm.on( "ready-OnEnterFiring", function( evnt, data ) {
+						throw new Error( "OH SNAP!" );
+					} );
+					fsm.handle( "start" );
+					res.should.equal( "Error: OH SNAP!" );
+					console.log = log;
+				} );
+				it( "should throw an exception if subscriber throws and useSafeEmit is set to false", function() {
+					var fsm = fsmFactory.instanceWithOptions( { useSafeEmit: false } );
+					fsm.on( "ready-OnEnterFiring", function( evnt, data ) {
+						throw new Error( "OH SNAP!" );
+					} );
+					( function() {
+						fsm.handle( "start" );
+					} ).should.throw( /OH SNAP!/ );
+				} );
 			} );
 			describe( "When creating two instances from the same extended constructor function", function() {
 				it( "should not share instance state", function() {
@@ -193,9 +431,17 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 					fsmB.handle( "letsDoThis" );
 					fsmB.handle( "start" );
 					eventA.length.should.equal( 4 );
-					eventB.length.should.equal( 6 );
+					eventB.length.should.equal( 2 );
 				} );
 			} );
+			if ( fsmFactory.extendingWithStaticProps ) {
+				describe( "When adding static props", function() {
+					it( "should inherit static (constructor-level) members", function() {
+						var ctor = fsmFactory.extendingWithStaticProps();
+						ctor.should.have.property( "someStaticMethod" );
+					} );
+				} );
+			}
 		} );
 	} );
 }

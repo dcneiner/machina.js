@@ -6,7 +6,8 @@ function getDefaultBehavioralOptions() {
 			"*": []
 		},
 		states: {},
-		namespace: utils.makeFsmNamespace()
+		namespace: utils.makeFsmNamespace(),
+		useSafeEmit: false
 	};
 }
 
@@ -41,15 +42,15 @@ function BehavioralFsm( options ) {
 _.extend( BehavioralFsm.prototype, {
 	initialize: function() {},
 
-	// Probably need a getHandlerArgs method
-	// to handle not passing client as an arg
-	// in classic FSMs
-
 	initClient: function initClient( client ) {
 		var initialState = this.initialState;
-		if ( initialState ) {
-			this.transition( client, initialState );
+		if ( !initialState ) {
+			throw new Error( "You must specify an initial state for this FSM" );
 		}
+		if ( !this.states[ initialState ] ) {
+			throw new Error( "The initial state specified does not exist in the states object." );
+		}
+		this.transition( client, initialState );
 	},
 
 	ensureClientMeta: function ensureClientMeta( client ) {
@@ -61,50 +62,6 @@ _.extend( BehavioralFsm.prototype, {
 			this.initClient( client );
 		}
 		return client[ MACHINA_PROP ];
-	},
-
-	emit: function( eventName ) {
-		var args = getLeaklessArgs( arguments );
-		_.each( _.pick( this.eventListeners, "*", eventName ), function( listeners ) {
-			_.each( listeners, function( callback ) {
-				try {
-					callback.apply( this, args );
-				} catch (exception) {
-					if ( console && typeof console.log !== "undefined" ) {
-						console.log( exception.toString() );
-					}
-				}
-			}, this );
-		}, this );
-	},
-
-	on: function( eventName, callback ) {
-		var self = this;
-		if ( !self.eventListeners[ eventName ] ) {
-			self.eventListeners[ eventName ] = [];
-		}
-		self.eventListeners[ eventName ].push( callback );
-		return {
-			eventName: eventName,
-			callback: callback,
-			off: function() {
-				self.off( eventName, callback );
-			}
-		};
-	},
-
-	off: function( eventName, callback ) {
-		if ( !eventName ) {
-			this.eventListeners = {};
-		} else {
-			if ( this.eventListeners[ eventName ] ) {
-				if ( callback ) {
-					this.eventListeners[ eventName ] = _.without( this.eventListeners[ eventName ], callback );
-				} else {
-					this.eventListeners[ eventName ] = [];
-				}
-			}
-		}
 	},
 
 	handle: function( client, inputType ) {
@@ -124,28 +81,29 @@ _.extend( BehavioralFsm.prototype, {
 			//if ( !clientMeta.currentAction ) {
 			clientMeta.currentAction = action;
 			//}
-			this.emit( HANDLING, {
-				client: client,
-				inputType: inputType
-			} );
-			if ( typeof handler === "function" ) {
-				result = handler.apply( this, isCatchAll ? args : [ args[ 0 ] ].concat( args.slice( 2 ) ) );
+			if ( !handler ) {
+				this.emit( NO_HANDLER, {
+					inputType: inputType,
+					client: client
+				} );
 			} else {
-				result = handler;
-				this.transition( client, handler );
+				this.emit( HANDLING, {
+					client: client,
+					inputType: inputType
+				} );
+				if ( typeof handler === "function" ) {
+					result = handler.apply( this, isCatchAll ? args : [ args[ 0 ] ].concat( args.slice( 2 ) ) );
+				} else {
+					result = handler;
+					this.transition( client, handler );
+				}
+				this.emit( HANDLED, {
+					client: client,
+					inputType: inputType
+				} );
 			}
-			this.emit( HANDLED, {
-				client: client,
-				inputType: inputType
-			} );
 			clientMeta.priorAction = clientMeta.currentAction;
 			clientMeta.currentAction = "";
-			this.processQueue( client, NEXT_HANDLER );
-		} else {
-			this.emit( NO_HANDLER, {
-				inputType: inputType,
-				client: client
-			} );
 		}
 	},
 
@@ -198,27 +156,10 @@ _.extend( BehavioralFsm.prototype, {
 		}
 	},
 
-	deferUntilNextHandler: function( client ) {
+	processQueue: function( client ) {
 		var clientMeta = this.ensureClientMeta( client );
-		if ( clientMeta.currentActionArgs ) {
-			var queued = {
-				type: NEXT_HANDLER,
-				args: clientMeta.currentActionArgs
-			};
-			clientMeta.inputQueue.push( queued );
-			this.emit( DEFERRED, {
-				state: clientMeta.state,
-				queuedArgs: queued
-			} );
-		}
-	},
-
-	processQueue: function( client, type ) {
-		var clientMeta = this.ensureClientMeta( client );
-		var filterFn = ( type === NEXT_TRANSITION ) ? function( item ) {
-			return item.type === NEXT_TRANSITION && ( ( !item.untilState ) || ( item.untilState === clientMeta.state ) );
-		} : function( item ) {
-			return item.type === NEXT_HANDLER;
+		var filterFn = function( item ) {
+			return ( ( !item.untilState ) || ( item.untilState === clientMeta.state ) );
 		};
 		var toProcess = _.filter( clientMeta.inputQueue, filterFn );
 		clientMeta.inputQueue = _.difference( clientMeta.inputQueue, toProcess );
@@ -227,28 +168,17 @@ _.extend( BehavioralFsm.prototype, {
 		}, this );
 	},
 
-	clearQueue: function( client, type, name ) {
+	clearQueue: function( client, name ) {
 		var clientMeta = this.ensureClientMeta( client );
-		if ( !type ) {
+		if ( !name ) {
 			clientMeta.inputQueue = [];
 		} else {
-			var filter;
-			if ( type === NEXT_TRANSITION ) {
-				filter = function( evnt ) {
-					return ( evnt.type === NEXT_TRANSITION && ( name ? evnt.untilState === name : true ) );
-				};
-			} else if ( type === NEXT_HANDLER ) {
-				filter = function( evnt ) {
-					return evnt.type === NEXT_HANDLER;
-				};
-			}
+			var filter = function( evnt ) {
+				return ( name ? evnt.untilState !== name : true );
+			};
 			clientMeta.inputQueue = _.filter( clientMeta.inputQueue, filter );
 		}
 	}
-} );
+}, emitter );
 
-BehavioralFsm.extend = function( protoProps, classProps ) {
-	var fsm = inherits( this, protoProps, classProps );
-	fsm.extend = this.extend;
-	return fsm;
-};
+BehavioralFsm.extend = extend;
