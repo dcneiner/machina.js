@@ -52,6 +52,14 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						fsm.handle( client, "start" );
 					} ).should.throw( /The initial state specified does not exist in the states object/ );
 				} );
+				it( "should invoke a custom initialize method", function() {
+					var fsm = fsmFactory.instanceWithOptions( {
+						initialize: function() {
+							this.initializeHasExecuted = true;
+						}
+					} );
+					fsm.initializeHasExecuted.should.be.true;
+				} );
 			} );
 			describe( "When acting on a client", function() {
 				it( "should transition a new client to the initial state", function() {
@@ -67,7 +75,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						data: {
 							fromState: undefined,
 							action: "",
-							toState: "uninitialized"
+							toState: "uninitialized",
+							client: client
 						}
 					} );
 				} );
@@ -102,7 +111,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						data: {
 							fromState: "uninitialized",
 							action: "uninitialized.start",
-							toState: "ready"
+							toState: "ready",
+							client: client
 						}
 					} );
 					events[ 3 ].should.eql( { eventName: "ready-OnEnterFiring", data: undefined } );
@@ -123,7 +133,7 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						}
 					} );
 				} );
-				it( "should handle deferred-until-transition input properly", function() {
+				it( "should handle deferred-until-transition input properly (with a target state)", function() {
 					var fsm = fsmFactory.instanceWithOptions();
 					var events = [];
 					fsm.on( "*", function( evnt, data ) {
@@ -138,7 +148,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							data: {
 								fromState: undefined,
 								action: "",
-								toState: "uninitialized"
+								toState: "uninitialized",
+								client: client
 							}
 						},
 						{
@@ -152,7 +163,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							eventName: "deferred",
 							data: {
 								state: "uninitialized",
-								queuedArgs: { "args": [ "letsDoThis" ], "type": "transition", "untilState": "ready" }
+								queuedArgs: { "args": [ "letsDoThis" ], "type": "transition", "untilState": "ready" },
+								client: client
 							}
 						},
 						{
@@ -174,7 +186,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							data: {
 								fromState: "uninitialized",
 								action: "uninitialized.start",
-								toState: "ready"
+								toState: "ready",
+								client: client
 							}
 						},
 						{
@@ -203,7 +216,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							data: {
 								fromState: "ready",
 								action: "ready.letsDoThis",
-								toState: "notQuiteDone"
+								toState: "notQuiteDone",
+								client: client
 							}
 						},
 						{
@@ -221,6 +235,101 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							}
 					} ] );
 				} );
+
+				it( "should handle deferred-until-transition input properly (with NO target state)", function() {
+					var fsm = fsmFactory.instanceWithOptions( {
+						states: {
+							uninitialized: {
+								letsDoThis: function( client ) {
+									this.deferUntilTransition( client );
+								}
+							},
+							done: {
+								letsDoThis: function() {
+									this.emit( "weAlreadyDidThat" );
+								}
+							}
+						}
+					} );
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					var client = { name: "Dijkstra" };
+					fsm.handle( client, "letsDoThis" );
+					fsm.transition( client, "done" );
+					events.should.eql( [
+						{
+							"eventName": "transition",
+							"data": {
+								"action": "",
+								"fromState": undefined,
+								"toState": "uninitialized",
+								client: client
+							}
+						},
+						{
+							"eventName": "handling",
+							"data": {
+								"client": client,
+								"inputType": "letsDoThis"
+							}
+						},
+						{
+							"eventName": "deferred",
+							"data": {
+								"state": "uninitialized",
+								"queuedArgs": {
+									"type": "transition",
+									"untilState": undefined,
+									"args": [
+										"letsDoThis"
+									]
+								},
+								client: client
+							}
+						},
+						{
+							"eventName": "handled",
+							"data": {
+								"client": client,
+								"inputType": "letsDoThis"
+							}
+						},
+						{
+							"eventName": "transition",
+							"data": {
+								"fromState": "uninitialized",
+								"action": "",
+								"toState": "done",
+								client: client
+							}
+						},
+						{
+							"eventName": "done-OnEnterFiring",
+							"data": undefined
+						},
+						{
+							"eventName": "handling",
+							"data": {
+								"client": client,
+								"inputType": "letsDoThis"
+							}
+						},
+						{
+							"eventName": "weAlreadyDidThat",
+							"data": undefined
+						},
+						{
+							"eventName": "handled",
+							"data": {
+								"client": client,
+								"inputType": "letsDoThis"
+							}
+						}
+					] );
+				} );
+
 				it( "should clear queued input when calling clearQueue", function() {
 					var fsm = fsmFactory.instanceWithOptions( {
 						states: {
@@ -252,7 +361,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							data: {
 								fromState: undefined,
 								action: "",
-								toState: "uninitialized"
+								toState: "uninitialized",
+								client: client
 							}
 						},
 						{
@@ -270,7 +380,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 									"args": [ "letsDoThis" ],
 									"type": "transition",
 									"untilState": "ready"
-								}
+								},
+								client: client
 							}
 						},
 						{
@@ -306,7 +417,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							data: {
 								fromState: "uninitialized",
 								action: "uninitialized.start",
-								toState: "ready"
+								toState: "ready",
+								client: client
 							}
 						},
 						{
@@ -427,13 +539,20 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 					eventsB.should.eql( [
 						{
 							eventName: "transition",
-							data: { fromState: undefined, action: "", toState: "uninitialized" } },
+							data: {
+								fromState: undefined,
+								action: "",
+								toState: "uninitialized",
+								client: client
+							}
+						},
 						{
 							eventName: "transition",
 							data: {
 								fromState: "uninitialized",
 								action: "uninitialized.start",
-								toState: "ready"
+								toState: "ready",
+								client: client
 							}
 						}
 					] );
@@ -528,6 +647,56 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						fsm.handle( client, "start" );
 					} ).should.throw( /OH SNAP!/ );
 				} );
+				it( "should enforce payload structure (for BehavioralFsm instances", function() {
+					var fsm = fsmFactory.instanceWithOptions( {
+						states: {
+							uninitialized: {
+								start: function( client ) {
+									/*	emitting the string (second arg) will result
+										in an object payload like
+										{
+											data: {
+												client: client,
+												data: "oh, hai there Dijkstra"
+											}
+										}
+										Not crazy about the data.data part, however, the point is
+										to encourage structured payloads to begin with (so, objects)
+										This is just the fallback if that isn't done.
+									*/
+									var payload = this.buildEventPayload( client, "oh, hai there " + client.name );
+									this.emit( "customEvent", payload );
+								}
+							}
+						}
+					} );
+					var events = [];
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					var client = { name: "Dijkstra" };
+					fsm.handle( client, "start" );
+					console.log( events );
+					events.should.eql( [
+						{
+							eventName: "transition",
+							data: { fromState: undefined,
+								action: "",
+								toState: "uninitialized",
+								client: client } },
+						{ eventName: "handling",
+							data: { inputType: "start", client: client } },
+						{
+							eventName: "customEvent",
+							data: {
+								client: client,
+								data: "oh, hai there Dijkstra"
+							}
+						},
+						{ eventName: "handled",
+							data: { inputType: "start", client: client } }
+					] );
+				} );
 			} );
 			describe( "When creating two instances from the same extended constructor function", function() {
 				it( "should not share instance configuration state", function() {
@@ -554,7 +723,8 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						data: {
 							fromState: "uninitialized",
 							action: "uninitialized.start",
-							toState: "ready"
+							toState: "ready",
+							client: clientA
 						}
 					} );
 					eventA[ 3 ].should.eql( { eventName: "ready-OnEnterFiring", data: undefined } );
