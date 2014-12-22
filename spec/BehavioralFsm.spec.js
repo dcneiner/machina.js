@@ -515,7 +515,7 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 					} );
 					var client = { name: "Dijkstra" };
 					fsm.handle( client, "start" );
-					res.should.equal( "Error: OH SNAP!" );
+					res.should.match( /Error: OH SNAP!/ );
 					console.log = log;
 				} );
 				it( "should throw an exception if subscriber throws and useSafeEmit is set to false", function() {
