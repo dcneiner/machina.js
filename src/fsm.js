@@ -21,6 +21,14 @@ var Fsm = BehavioralFsm.extend( {
 		}
 		return this;
 	},
+	// "classic" machina FSM can support event payloads of any type
+	// not going to force these into a specific structure like I did
+	// the BehavioralFsm event payloads
+	buildEventPayload: function() {
+		var client = this;
+		var data = ( ( arguments[ 0 ] === this ) ? arguments[ 1 ] : arguments[ 0 ] ) || null;
+		return data;
+	},
 	handle: function( inputType ) {
 		return BehavioralFsm.prototype.handle.apply(
 			this, ( arguments[ 0 ] === this ) ? arguments : [ this ].concat( getLeaklessArgs( arguments ) )

@@ -64,6 +64,14 @@ _.extend( BehavioralFsm.prototype, {
 		return client[ MACHINA_PROP ];
 	},
 
+	buildEventPayload: function( client, data ) {
+		if ( _.isPlainObject( data ) ) {
+			return _.extend( data, { client: client } );
+		} else {
+			return { client: client, data: data || null };
+		}
+	},
+
 	handle: function( client, inputType ) {
 		var clientMeta = this.ensureClientMeta( client );
 		var args = getLeaklessArgs( arguments );
@@ -78,29 +86,19 @@ _.extend( BehavioralFsm.prototype, {
 			isCatchAll = ( handlerName === "*" );
 			handler = ( this.states[ currentState ][ handlerName ] || this[ handlerName ] ) || this[ "*" ];
 			action = clientMeta.state + "." + handlerName;
-			//if ( !clientMeta.currentAction ) {
 			clientMeta.currentAction = action;
-			//}
+			var eventPayload = this.buildEventPayload( client, { inputType: inputType } );
 			if ( !handler ) {
-				this.emit( NO_HANDLER, {
-					inputType: inputType,
-					client: client
-				} );
+				this.emit( NO_HANDLER, eventPayload );
 			} else {
-				this.emit( HANDLING, {
-					client: client,
-					inputType: inputType
-				} );
+				this.emit( HANDLING, eventPayload );
 				if ( typeof handler === "function" ) {
 					result = handler.apply( this, isCatchAll ? args : [ args[ 0 ] ].concat( args.slice( 2 ) ) );
 				} else {
 					result = handler;
 					this.transition( client, handler );
 				}
-				this.emit( HANDLED, {
-					client: client,
-					inputType: inputType
-				} );
+				this.emit( HANDLED, eventPayload );
 			}
 			clientMeta.priorAction = clientMeta.currentAction;
 			clientMeta.currentAction = "";
@@ -120,11 +118,12 @@ _.extend( BehavioralFsm.prototype, {
 				clientMeta.targetReplayState = newState;
 				clientMeta.priorState = curState;
 				clientMeta.state = newState;
-				this.emit.call( this, TRANSITION, {
+				var eventPayload = this.buildEventPayload( client, {
 					fromState: clientMeta.priorState,
 					action: clientMeta.currentAction,
 					toState: newState
 				} );
+				this.emit( TRANSITION, eventPayload );
 				if ( this.states[ newState ]._onEnter ) {
 					this.states[ newState ]._onEnter.call( this, client );
 				}
@@ -149,10 +148,11 @@ _.extend( BehavioralFsm.prototype, {
 				args: clientMeta.currentActionArgs
 			};
 			clientMeta.inputQueue.push( queued );
-			this.emit( DEFERRED, {
+			var eventPayload = this.buildEventPayload( client, {
 				state: clientMeta.state,
 				queuedArgs: queued
 			} );
+			this.emit( DEFERRED, eventPayload );
 		}
 	},
 
