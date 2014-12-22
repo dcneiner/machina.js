@@ -56,7 +56,7 @@ module.exports = function( machina ) {
 		behavioral: {
 			"With No Inheritance": {
 				instanceWithDefaults: function() {
-					return new machina.BehavioralFsm();
+					return new machina.BehavioralFsm( { states: { uninitialized: {} } } );
 				},
 				instanceWithOptions: function( opt ) {
 					return new machina.BehavioralFsm( _.merge( {}, this.options, ( opt || {} ) ) );
@@ -65,7 +65,7 @@ module.exports = function( machina ) {
 			},
 			"With Some Inheritance": {
 				instanceWithDefaults: function() {
-					var ParentFsm = BehavioralFsm.extend( {} );
+					var ParentFsm = BehavioralFsm.extend( { states: { uninitialized: {} } } );
 					return new ParentFsm();
 				},
 				instanceWithOptions: function( opt ) {
@@ -73,11 +73,16 @@ module.exports = function( machina ) {
 					var ParentFsm = BehavioralFsm.extend( options );
 					return new ParentFsm();
 				},
+				extendingWithStaticProps: function() {
+					var options = _.merge( {}, grandparentOptions, parentOptions, childOptions );
+					var ParentFsm = BehavioralFsm.extend( options, { someStaticMethod: function() {} } );
+					return ParentFsm;
+				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			},
 			"With More Inheritance": {
 				instanceWithDefaults: function() {
-					var ParentFsm = BehavioralFsm.extend( {} );
+					var ParentFsm = BehavioralFsm.extend( { states: { uninitialized: {} } } );
 					var ChildFsm = ParentFsm.extend( {} );
 					return new ChildFsm();
 				},
@@ -87,11 +92,17 @@ module.exports = function( machina ) {
 					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions, ( opt || {} ) ) );
 					return new ChildFsm();
 				},
+				extendingWithStaticProps: function() {
+					var options = _.merge( {}, grandparentOptions, parentOptions );
+					var ParentFsm = BehavioralFsm.extend( options, { someStaticMethod: function() {} } );
+					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions ) );
+					return ChildFsm;
+				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			},
 			"With Too Much Inheritance": {
 				instanceWithDefaults: function() {
-					var GrandparentFsm = BehavioralFsm.extend( {} );
+					var GrandparentFsm = BehavioralFsm.extend( { states: { uninitialized: {} } } );
 					var ParentFsm = GrandparentFsm.extend( {} );
 					var ChildFsm = ParentFsm.extend( {} );
 					return new ChildFsm();
@@ -102,13 +113,19 @@ module.exports = function( machina ) {
 					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions, ( opt || {} ) ) );
 					return new ChildFsm();
 				},
+				extendingWithStaticProps: function() {
+					var GrandparentFsm = BehavioralFsm.extend( grandparentOptions, { someStaticMethod: function() {} } );
+					var ParentFsm = GrandparentFsm.extend( parentOptions );
+					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions ) );
+					return ChildFsm;
+				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			}
 		},
 		machinaFsm: {
 			"With No Inheritance": {
 				instanceWithDefaults: function() {
-					return new machina.Fsm();
+					return new machina.Fsm( { states: { uninitialized: {} } } );
 				},
 				instanceWithOptions: function( opt ) {
 					return new machina.Fsm( _.merge( {}, this.options, ( opt || {} ) ) );
@@ -117,7 +134,7 @@ module.exports = function( machina ) {
 			},
 			"With Some Inheritance": {
 				instanceWithDefaults: function() {
-					var ParentFsm = Fsm.extend( {} );
+					var ParentFsm = Fsm.extend( { states: { uninitialized: {} } } );
 					return new ParentFsm();
 				},
 				instanceWithOptions: function( opt ) {
@@ -125,11 +142,16 @@ module.exports = function( machina ) {
 					var ParentFsm = Fsm.extend( _.merge( {}, options, opt ) );
 					return new ParentFsm();
 				},
+				extendingWithStaticProps: function() {
+					var options = _.merge( {}, grandparentOptions, parentOptions, childOptions );
+					var ParentFsm = Fsm.extend( options, { someStaticMethod: function() {} } );
+					return ParentFsm;
+				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			},
 			"With More Inheritance": {
 				instanceWithDefaults: function() {
-					var ParentFsm = Fsm.extend( {} );
+					var ParentFsm = Fsm.extend( { states: { uninitialized: {} } } );
 					var ChildFsm = ParentFsm.extend( {} );
 					return new ChildFsm();
 				},
@@ -139,11 +161,17 @@ module.exports = function( machina ) {
 					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions, opt ) );
 					return new ChildFsm();
 				},
+				extendingWithStaticProps: function() {
+					var options = _.merge( {}, grandparentOptions, parentOptions );
+					var ParentFsm = Fsm.extend( options, { someStaticMethod: function() {} } );
+					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions ) );
+					return ChildFsm;
+				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			},
 			"With Too Much Inheritance": {
 				instanceWithDefaults: function() {
-					var GrandparentFsm = Fsm.extend( {} );
+					var GrandparentFsm = Fsm.extend( { states: { uninitialized: {} } } );
 					var ParentFsm = GrandparentFsm.extend( {} );
 					var ChildFsm = ParentFsm.extend( {} );
 					return new ChildFsm();
@@ -153,6 +181,12 @@ module.exports = function( machina ) {
 					var ParentFsm = GrandparentFsm.extend( parentOptions );
 					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions, opt ) );
 					return new ChildFsm();
+				},
+				extendingWithStaticProps: function() {
+					var GrandparentFsm = Fsm.extend( grandparentOptions, { someStaticMethod: function() {} } );
+					var ParentFsm = GrandparentFsm.extend( parentOptions );
+					var ChildFsm = ParentFsm.extend( _.merge( {}, childOptions ) );
+					return ChildFsm;
 				},
 				options: _.merge( {}, grandparentOptions, parentOptions, childOptions )
 			}
