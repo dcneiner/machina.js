@@ -392,7 +392,7 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 						throw new Error( "OH SNAP!" );
 					} );
 					fsm.handle( "start" );
-					res.should.equal( "Error: OH SNAP!" );
+					res.should.match( /Error: OH SNAP!/ );
 					console.log = log;
 				} );
 				it( "should throw an exception if subscriber throws and useSafeEmit is set to false", function() {

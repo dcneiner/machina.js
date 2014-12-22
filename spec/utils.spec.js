@@ -46,7 +46,7 @@ describe( "Machina Namespace Events", function() {
 				};
 				machina.on( "newfsm", callback );
 				var x = new machina.Fsm( { states: { uninitialized: {} } } );
-				res.should.eql( "Error: O NOES!" );
+				res.should.match( /Error: O NOES!/ );
 				console.log = log;
 			} );
 		} );
@@ -98,7 +98,7 @@ describe( "Machina Namespace Events", function() {
 				};
 				machina.on( "*", callback );
 				var x = new machina.Fsm( { states: { uninitialized: {} } } );
-				res.should.eql( "Error: O NOES!" );
+				res.should.match( /Error: O NOES!/ );
 				console.log = log;
 			} );
 		} );

@@ -12,7 +12,7 @@ var emitter = {
 					} catch (exception) {
 						/* istanbul ignore else  */
 						if ( console && typeof console.log !== "undefined" ) {
-							console.log( exception.toString() );
+							console.log( exception.stack );
 						}
 					}
 				}
@@ -28,7 +28,7 @@ var emitter = {
 					} catch (exception) {
 						/* istanbul ignore else  */
 						if ( console && typeof console.log !== "undefined" ) {
-							console.log( exception.toString() );
+							console.log( exception.stack );
 						}
 					}
 				}
