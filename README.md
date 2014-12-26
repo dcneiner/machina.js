@@ -154,7 +154,7 @@ machina provides two constructor functions for creating an FSM: `machina.Fsm` an
 `BehavioralFsm` is new to machina as of v0.5 (though the `Fsm` constructor now inherits from it). The `BehavioralFsm` constructor lets you create an FSM that defines *behavior* (hence the name) that you want applied to multiple, separate instances of *state*. A `BehavioralFsm` instance does not (should not!) track state locally, on itself. For example, consider this scenario....where we get to twist our "TrafficLightFsm" beyond reason (:smile:):
 
 ```javascript
-var trafficLight = new machina.BehavioralFsm({
+var trafficLightFsm = new machina.BehavioralFsm({
 
     initialState: "disabled",
 
@@ -162,7 +162,7 @@ var trafficLight = new machina.BehavioralFsm({
 
         disabled: {
             activate: function(client, isStopped) {
-                this.transition(isStopped ? "stop" : "go");
+                this.transition(client, isStopped ? "stop" : "go");
             }
         },
 
