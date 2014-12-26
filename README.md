@@ -323,12 +323,15 @@ trafficLight.off("transition");
 trafficLight.off();
 ```
 
+You can emit your own custom events in addition to the built-in events machina emits. To read more about these events, see the [wiki](https://github.com/ifandelse/machina.js/wiki).
+
 ### The Top Level machina object
 The top level `machina` object has the following members:
 
 * `Fsm` - the constructor function used to create FSMs.
 * `BehavioralFsm` – the constructor function used to create BehavioralFSM instances.
-* `utils` - contains helper functions that can be overridden to change default behavior(s) in machina:  * `makeFsmNamespace` - function that provides a default "channel" or "exchange" for an FSM instance.  (e.g. - fsm.0, fsm.1, etc.)
+* `utils` - contains helper functions that can be overridden to change default behavior(s) in machina:
+    * `makeFsmNamespace` - function that provides a default "channel" or "exchange" for an FSM instance.  (e.g. - fsm.0, fsm.1, etc.)
 * `on` - method used to subscribe a callback to top-level machina events (currently the only event published at this level is `newFsm`)
 * `off` - method used to unsubscribe a callback to top-level machina events.
 * `emit` - top-level method used to emit events.
