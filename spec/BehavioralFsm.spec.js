@@ -80,7 +80,7 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						}
 					} );
 				} );
-				it( "should handle input", function() {
+				it( "should handle input without arguments", function() {
 					var fsm = fsmFactory.instanceWithOptions();
 					var events = [];
 					fsm.on( "*", function( evnt, data ) {
@@ -96,6 +96,21 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						eventName: "handled",
 						data: { client: client, inputType: "start" }
 					} );
+					client.__machina__.state.should.equal( "ready" );
+				} );
+				it( "should handle input with arguments", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var events = [];
+					var res;
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					var client = { name: "Dijkstra" };
+					fsm.handle( client, "start" );
+					res = fsm.handle( client, "canWeDoThis", "Grace Hopper" );
+					res.should.equal( "yep, Grace Hopper can do it." );
+					console.log( res );
+					console.log( events );
 					client.__machina__.state.should.equal( "ready" );
 				} );
 				it( "should transition properly", function() {
@@ -235,7 +250,6 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 							}
 					} ] );
 				} );
-
 				it( "should handle deferred-until-transition input properly (with NO target state)", function() {
 					var fsm = fsmFactory.instanceWithOptions( {
 						states: {
@@ -329,7 +343,6 @@ function runBehavioralFsmSpec( description, fsmFactory ) {
 						}
 					] );
 				} );
-
 				it( "should clear queued input when calling clearQueue", function() {
 					var fsm = fsmFactory.instanceWithOptions( {
 						states: {

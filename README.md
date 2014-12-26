@@ -1,6 +1,6 @@
 # machina.js - v0.5.0-1
 
-> NOTE: v0.5.0-1 is a *pre-release* (the first of many v0.4 pre-releases). The plans I have for v0.5 will change a lot for the better - but will also include some breaking changes. I will detail those as I push them. The official release/stable version is *still* currently v0.3.8.
+> NOTE: v0.5.0-1 is a *pre-release*. The plans I have for v0.5 will change a lot for the better - but will also include some breaking changes. I will detail those as I push them. The official release/stable version is *still* currently v0.4.0.
 
 ## What is it?
 Machina.js is a JavaScript framework for highly customizable finite state machines (FSMs).  Many of the ideas for machina have been loosely inspired by the Erlang/OTP FSM behaviors.
@@ -91,7 +91,7 @@ You can see in the above example that anytime the FSM handles an event, it first
 Now that we've seen a quick example, let's do a whirlwind API tour.
 
 ## Have More Questions?
-Read the wiki and the source – you might find your answer and more! Check out the [issue](https://github.com/ifandelse/machina.js/issues/4) opened by @burin - a *great* example of how to use github issues to ask questions, provide sample code, etc. I only ask that if you open an issue, that it be *focused on a specific problem or bug* (not wide, open ambiguity, please). We also have an IRC chat room on freenode: #machinajs. It's a quiet place, but I'll do my best to answer questions if they arise.
+Read the wiki and the source – you might find your answer and more! Check out the [issue](https://github.com/ifandelse/machina.js/issues/4) opened by @burin - a *great* example of how to use github issues to ask questions, provide sample code, etc. I only ask that if you open an issue, that it be *focused on a specific problem or bug* (not wide-open ambiguity, please).
 
 ## Whirlwind API Tour
 When you are creating a new FSM instance, `machina.Fsm` takes 1 argument - an options object.  Here's a breakdown of the members of this `options` object:

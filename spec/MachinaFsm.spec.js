@@ -61,7 +61,7 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 				} );
 			} );
 			describe( "When acting on itself as the client", function() {
-				it( "should handle input", function() {
+				it( "should handle input without arguments", function() {
 					var fsm = fsmFactory.instanceWithOptions();
 					var events = [];
 					fsm.on( "*", function( evnt, data ) {
@@ -76,6 +76,19 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 						eventName: "handled",
 						data: { inputType: "start" }
 					} );
+					fsm.state.should.equal( "ready" );
+				} );
+				it( "should handle input with arguments", function() {
+					var fsm = fsmFactory.instanceWithOptions();
+					var events = [];
+					var res;
+					fsm.on( "*", function( evnt, data ) {
+						events.push( { eventName: evnt, data: data } );
+					} );
+					fsm.handle( "start" );
+					res = fsm.handle( "canWeDoThis", "Grace Hopper" );
+					res.should.equal( "yep, Grace Hopper can do it." );
+					console.log( res );
 					fsm.state.should.equal( "ready" );
 				} );
 				it( "should transition properly", function() {
@@ -118,7 +131,6 @@ function runMachinaFsmSpec( description, fsmFactory ) {
 					} );
 					fsm.handle( "letsDoThis" );
 					fsm.handle( "start" );
-					//console.log( events );
 					events.should.eql( [
 						{
 							eventName: "handling",

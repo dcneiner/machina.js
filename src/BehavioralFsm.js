@@ -72,6 +72,10 @@ _.extend( BehavioralFsm.prototype, {
 		}
 	},
 
+	getHandlerArgs: function( args, isCatchAll ) {
+		return isCatchAll ? args : [ args[ 0 ] ].concat( args.slice( 2 ) );
+	},
+
 	handle: function( client, inputType ) {
 		var clientMeta = this.ensureClientMeta( client );
 		var args = getLeaklessArgs( arguments );
@@ -93,7 +97,7 @@ _.extend( BehavioralFsm.prototype, {
 			} else {
 				this.emit( HANDLING, eventPayload );
 				if ( typeof handler === "function" ) {
-					result = handler.apply( this, isCatchAll ? args : [ args[ 0 ] ].concat( args.slice( 2 ) ) );
+					result = handler.apply( this, this.getHandlerArgs( args, isCatchAll ) );
 				} else {
 					result = handler;
 					this.transition( client, handler );
@@ -103,6 +107,7 @@ _.extend( BehavioralFsm.prototype, {
 			clientMeta.priorAction = clientMeta.currentAction;
 			clientMeta.currentAction = "";
 		}
+		return result;
 	},
 
 	transition: function( client, newState ) {
