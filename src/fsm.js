@@ -21,6 +21,9 @@ var Fsm = BehavioralFsm.extend( {
 		}
 		return this;
 	},
+	getHandlerArgs: function( args, isCatchAll ) {
+		return isCatchAll ? args.slice( 1 ) : args.slice( 2 );
+	},
 	// "classic" machina FSM can support event payloads of any type
 	// not going to force these into a specific structure like I did
 	// the BehavioralFsm event payloads
