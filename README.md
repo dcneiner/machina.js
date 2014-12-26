@@ -232,7 +232,10 @@ trafficLightFsm.activateInStop(light1);
       }
     }
 
-You can see that our trafficLightFsm has "stamped" this client with it's machina-specific state
+You can see that our trafficLightFsm has "stamped" this client with it's machina-specific state.
+You may also notice that the prior state was "disabled". This means that the very first
+thing a BehavioralFsm does when acting on a client it hasn't seen before is to transition it
+into the initial state *before* doing anything else (like handling the `activate` input).
 
 */
 
