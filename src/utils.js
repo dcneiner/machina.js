@@ -8,6 +8,39 @@ var INVALID_STATE = "invalidstate";
 var DEFERRED = "deferred";
 var NEW_FSM = "newfsm";
 
+function getDefaultBehavioralOptions() {
+	return {
+		initialState: "uninitialized",
+		eventListeners: {
+			"*": []
+		},
+		states: {},
+		namespace: utils.makeFsmNamespace(),
+		useSafeEmit: false
+	};
+}
+
+function getDefaultClientMeta() {
+	return {
+		inputQueue: [],
+		targetReplayState: "",
+		state: undefined,
+		priorState: undefined,
+		priorAction: "",
+		currentAction: "",
+		currentActionArgs: undefined,
+		inExitHandler: false
+	};
+}
+
+function getLeaklessArgs( args, startIdx ) {
+	var result = [];
+	for (var i = 0; i < args.length; i++) {
+		result[ i ] = args[ i ];
+	}
+	return result.slice( startIdx || 0 );
+}
+
 // _machKeys are members we want to track across the prototype chain of an extended FSM constructor
 // Since we want to eventually merge the aggregate of those values onto the instance so that FSMs
 // that share the same extended prototype won't share state *on* those prototypes.
@@ -79,5 +112,7 @@ var utils = {
 		return function() {
 			return "fsm." + machinaCount++;
 		};
-	})()
+	})(),
+	getDefaultOptions: getDefaultBehavioralOptions,
+	getDefaultClientMeta: getDefaultClientMeta
 };

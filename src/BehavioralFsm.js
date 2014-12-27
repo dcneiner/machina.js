@@ -1,36 +1,4 @@
 var MACHINA_PROP = "__machina__";
-function getDefaultBehavioralOptions() {
-	return {
-		initialState: "uninitialized",
-		eventListeners: {
-			"*": []
-		},
-		states: {},
-		namespace: utils.makeFsmNamespace(),
-		useSafeEmit: false
-	};
-}
-
-function getDefaultClientMeta() {
-	return {
-		inputQueue: [],
-		targetReplayState: "",
-		state: undefined,
-		priorState: undefined,
-		priorAction: "",
-		currentAction: "",
-		currentActionArgs: undefined,
-		inExitHandler: false
-	};
-}
-
-function getLeaklessArgs( args, startIdx ) {
-	var result = [];
-	for (var i = 0; i < args.length; i++) {
-		result[ i ] = args[ i ];
-	}
-	return result.slice( startIdx || 0 );
-}
 
 function BehavioralFsm( options ) {
 	_.extend( this, options );
