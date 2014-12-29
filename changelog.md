@@ -1,6 +1,6 @@
 ###v0.5.0-1 (pre-release)
 * Added the `BehavioralFsm` constructor function/prototype.
-* Refactored the `Fsm` constructor to exend `BehavioralFsm`.
+* Refactored the `Fsm` constructor to extend `BehavioralFsm`.
 * Converted all tests to use should.js (instead of expect.js).
 * Added istanbul code coverage.
 * Removed the internal `deepExtend` function in favor of using lodash's `merge` method.
